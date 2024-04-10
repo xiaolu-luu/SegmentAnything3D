@@ -6,4 +6,3 @@ o3d.visualization.draw_geometries([pcd])
 #scene0000_00_ensemble
 #scene0000_00_group
 
-python sam3d.py --rgb_path data/scannetv2_images/scene0568_00 --data_path data/dataset/val/scene0568_00.pth --save_path data/savepcd --save_2dmask_path data/savesam --sam_checkpoint_path sam_vit_h_4b8939.pth 

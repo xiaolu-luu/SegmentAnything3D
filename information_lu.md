@@ -30,5 +30,7 @@ python download_data.py --out_dir={pwd} --id scene0568_00
 python download_data.py --out_dir={pwd} --id scene0568_01
 python download_data.py --out_dir={pwd} --id scene0568_02
 
-
-python download_data.py --out_dir={pwd} --id scene0568_01
+# 运行
+```bash
+python sam3d.py --rgb_path data/scannetv2_images/scene0568_00 --data_path data/dataset/val/scene0568_00.pth --save_path data/savepcd --save_2dmask_path data/savesam --sam_checkpoint_path sam_vit_h_4b8939.pth 
+```
