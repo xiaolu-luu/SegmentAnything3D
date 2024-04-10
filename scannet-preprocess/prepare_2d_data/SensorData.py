@@ -4,13 +4,17 @@ import numpy as np
 import zlib
 import imageio
 import cv2
-
+#定义两个字典常量用于存储颜色和深度数据的压缩类型
 COMPRESSION_TYPE_COLOR = {-1:'unknown', 0:'raw', 1:'png', 2:'jpeg'}
 COMPRESSION_TYPE_DEPTH = {-1:'unknown', 0:'raw_ushort', 1:'zlib_ushort', 2:'occi_ushort'}
 
 class RGBDFrame():
 
   def load(self, file_handle):
+    '''
+    从给定的文件句柄中加载帧数据。在这个方法中，首先从文件中读取相机到世界坐标系的变换矩阵、颜色和深度图像的时间戳、
+    颜色和深度图像的大小(字节数),然后分别读取颜色和深度图像的数据,并存储在color_data和depth_data属性中
+    '''
     self.camera_to_world = np.asarray(struct.unpack('f'*16, file_handle.read(16*4)), dtype=np.float32).reshape(4, 4)
     self.timestamp_color = struct.unpack('Q', file_handle.read(8))[0]
     self.timestamp_depth = struct.unpack('Q', file_handle.read(8))[0]
@@ -21,6 +25,9 @@ class RGBDFrame():
 
 
   def decompress_depth(self, compression_type):
+    '''
+    对深度图像进行解压缩,根据给定的压缩类型选择相应的解压缩方法。目前仅支持zlib_ushort类型的解压缩
+    '''
     if compression_type == 'zlib_ushort':
        return self.decompress_depth_zlib()
     else:
@@ -28,10 +35,16 @@ class RGBDFrame():
 
 
   def decompress_depth_zlib(self):
+    '''
+    使用zlib库对深度数据进行解压缩
+    '''
     return zlib.decompress(self.depth_data)
 
 
   def decompress_color(self, compression_type):
+    '''
+    对颜色图像进行解压缩，根据给定的压缩类型选择相应的解压缩方法。目前仅支持jpeg类型的解压缩
+    '''
     if compression_type == 'jpeg':
        return self.decompress_color_jpeg()
     else:
@@ -39,6 +52,9 @@ class RGBDFrame():
 
 
   def decompress_color_jpeg(self):
+    '''
+    使用imageio库读取JPEG格式的颜色数据
+    '''
     return imageio.imread(self.color_data)
 
 

@@ -49,7 +49,7 @@ def get_sam(image, mask_generator):
 
 
 def get_pcd(scene_name, color_name, rgb_path, mask_generator, save_2dmask_path):
-    intrinsic_path = join(rgb_path, scene_name, 'intrinsics', 'intrinsic_depth.txt')
+    intrinsic_path = join(rgb_path, scene_name, 'intrinsics', 'intrinsic_depth.txt')#'data/scannetv2_images/scene0568_00/intrinsics/intrinsic_depth.txt'
     depth_intrinsic = np.loadtxt(intrinsic_path)
 
     pose = join(rgb_path, scene_name, 'pose', color_name[0:-4] + '.txt')
@@ -204,7 +204,7 @@ def seg_pcd(scene_name, rgb_path, data_path, save_path, mask_generator, voxel_si
     print(scene_name, flush=True)
     if os.path.exists(join(save_path, scene_name + ".pth")):
         return
-    color_names = sorted(os.listdir(join(rgb_path, scene_name, 'color')), key=lambda a: int(os.path.basename(a).split('.')[0]))
+    color_names = sorted(os.listdir(join(rgb_path, scene_name, 'color')), key=lambda a: int(os.path.basename(a).split('.')[0]))#rgb图像采样[0.jpg,20.jpg ....]
     pcd_list = []
     for color_name in color_names:
         print(color_name, flush=True)
@@ -250,11 +250,11 @@ def get_args():
 
     parser = argparse.ArgumentParser(
         description='Segment Anything on ScanNet.')
-    parser.add_argument('--rgb_path', type=str, help='the path of rgb data')
-    parser.add_argument('--data_path', type=str, default='', help='the path of pointcload data')
-    parser.add_argument('--save_path', type=str, help='Where to save the pcd results')
-    parser.add_argument('--save_2dmask_path', type=str, default='', help='Where to save 2D segmentation result from SAM')
-    parser.add_argument('--sam_checkpoint_path', type=str, default='', help='the path of checkpoint for SAM')
+    parser.add_argument('--rgb_path', default ="data/scannetv2_images/", type=str, help='the path of rgb data')
+    parser.add_argument('--data_path', default ="data/dataset/val/scene0568_00.pth", type=str, help='the path of pointcload data')
+    parser.add_argument('--save_path', default ="data/savepcd", type=str, help='Where to save the pcd results')
+    parser.add_argument('--save_2dmask_path', type=str, default='data/savesam', help='Where to save 2D segmentation result from SAM')
+    parser.add_argument('--sam_checkpoint_path', type=str, default='sam_vit_h_4b8939.pth', help='the path of checkpoint for SAM')
     parser.add_argument('--scannetv2_train_path', type=str, default='scannet-preprocess/meta_data/scannetv2_train.txt', help='the path of scannetv2_train.txt')
     parser.add_argument('--scannetv2_val_path', type=str, default='scannet-preprocess/meta_data/scannetv2_val.txt', help='the path of scannetv2_val.txt')
     parser.add_argument('--img_size', default=[640,480])

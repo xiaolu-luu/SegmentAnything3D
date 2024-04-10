@@ -26,14 +26,14 @@ from itertools import repeat
 # Load external constants
 from meta_data.scannet200_constants import VALID_CLASS_IDS_200, VALID_CLASS_IDS_20
 
-CLOUD_FILE_PFIX = '_vh_clean_2'
-SEGMENTS_FILE_PFIX = '.0.010000.segs.json'
-AGGREGATIONS_FILE_PFIX = '.aggregation.json'
-CLASS_IDS200 = VALID_CLASS_IDS_200
-CLASS_IDS20 = VALID_CLASS_IDS_20
+CLOUD_FILE_PFIX = '_vh_clean_2'#点云文件
+SEGMENTS_FILE_PFIX = '.0.010000.segs.json'#注释网格的分割
+AGGREGATIONS_FILE_PFIX = '.aggregation.json'#聚合后的实例级语义注释
+CLASS_IDS200 = VALID_CLASS_IDS_200#200个类别
+CLASS_IDS20 = VALID_CLASS_IDS_20#20个类别
 IGNORE_INDEX = -1
 
-
+#读取ply点云并返回array
 def read_plymesh(filepath):
     """Read ply file and return it as numpy array. Returns None if emtpy."""
     with open(filepath, 'rb') as f:
@@ -43,7 +43,7 @@ def read_plymesh(filepath):
         faces = np.stack(plydata['face'].data['vertex_indices'], axis=0)
         return vertices, faces
 
-
+# 将原始类别id映射到点云
 # Map the raw category id to the point cloud
 def point_indices_from_group(seg_indices, group, labels_pd):
     group_segments = np.array(group['segments'])
@@ -65,13 +65,15 @@ def point_indices_from_group(seg_indices, group, labels_pd):
         label_id200 = CLASS_IDS200.index(label_id200)
     else:
         label_id200 = IGNORE_INDEX
-
+    # 获取point，其中分割标签位于列表中
     # get points, where segment indices (points labelled with segment ids) are in the group segment list
     point_idx = np.where(np.isin(seg_indices, group_segments))[0]
     return point_idx, label_id20, label_id200
 
 
 def face_normal(vertex, face):
+    # 计算面的法线和面积
+    # Compute face normals and areas
     v01 = vertex[face[:, 1]] - vertex[face[:, 0]]
     v02 = vertex[face[:, 2]] - vertex[face[:, 0]]
     vec = np.cross(v01, v02)
@@ -82,6 +84,8 @@ def face_normal(vertex, face):
 
 
 def vertex_normal(vertex, face):
+    # 计算顶点的法线
+    # Compute vertex normals
     nf, area = face_normal(vertex, face)
     nf = nf * area
 
@@ -95,6 +99,8 @@ def vertex_normal(vertex, face):
 
 
 def handle_process(scene_path, output_path, labels_pd, train_scenes, val_scenes, parse_normals=True):
+    # 处理每个场景的函数
+    # Function to handle processing of each scene
     scene_id = os.path.basename(scene_path)
     mesh_path = os.path.join(scene_path, f'{scene_id}{CLOUD_FILE_PFIX}.ply')
     segments_file = os.path.join(scene_path, f'{scene_id}{CLOUD_FILE_PFIX}{SEGMENTS_FILE_PFIX}')
@@ -114,8 +120,8 @@ def handle_process(scene_path, output_path, labels_pd, train_scenes, val_scenes,
     print(f'Processing: {scene_id} in {split_name}')
 
     vertices, faces = read_plymesh(mesh_path)
-    coords = vertices[:, :3]
-    colors = vertices[:, 3:6]
+    coords = vertices[:, :3] #点云坐标
+    colors = vertices[:, 3:6]#点云颜色
     save_dict = dict(coord=coords, color=colors, scene_id=scene_id)
 
     # # Rotating the mesh to axis aligned
@@ -186,6 +192,7 @@ if __name__ == '__main__':
     parser.add_argument('--parse_normals', default=True, type=bool, help='Whether parse point normals')
     config = parser.parse_args()
 
+    # 加载标签映射和训练/验证集划分
     # Load label map
     labels_pd = pd.read_csv('scannet-preprocess/meta_data/scannetv2-labels.combined.tsv',
                             sep='\t', header=0)
@@ -195,7 +202,8 @@ if __name__ == '__main__':
         train_scenes = train_file.read().splitlines()
     with open('scannet-preprocess/meta_data/scannetv2_val.txt') as val_file:
         val_scenes = val_file.read().splitlines()
-
+    
+    # 创建输出目录
     # Create output directories
     train_output_dir = os.path.join(config.output_root, 'train')
     os.makedirs(train_output_dir, exist_ok=True)
@@ -203,7 +211,7 @@ if __name__ == '__main__':
     os.makedirs(val_output_dir, exist_ok=True)
     test_output_dir = os.path.join(config.output_root, 'test')
     os.makedirs(test_output_dir, exist_ok=True)
-
+    # 加载场景路径并进行数据预处理
     # Load scene paths
     scene_paths = sorted(glob.glob(config.dataset_root + '/scans*/scene*'))
 

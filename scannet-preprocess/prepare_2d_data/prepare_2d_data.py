@@ -30,6 +30,9 @@ import util
 #     print('Failed to import ScanNet code toolbox util')
 #     sys.exit(-1)
 
+# RGB-D传感器流（*sens）：压缩二进制格式，包含每帧的颜色、深度、相机姿势和其他数据；
+# 其中RGB图像大小为1296×968，深度图像大小为640×480
+
 # params
 parser = argparse.ArgumentParser()
 parser.add_argument('--scannet_path', required=True, help='path to scannet data')
@@ -37,7 +40,7 @@ parser.add_argument('--output_path', required=True, help='where to output 2d dat
 parser.add_argument('--export_label_images', dest='export_label_images', action='store_true')
 parser.add_argument('--label_type', default='label-filt', help='which labels (label or label-filt)')
 parser.add_argument('--frame_skip', type=int, default=20, help='export every nth frame')
-parser.add_argument('--label_map_file', default='',
+parser.add_argument('--label_map_file', default='scannet-preprocess/meta_data/scannetv2-labels.combined.tsv',
                     help='path to scannetv2-labels.combined.tsv (required for label export only)')
 parser.add_argument('--output_image_width', type=int, default=640, help='export image width')
 parser.add_argument('--output_image_height', type=int, default=480, help='export image height')
@@ -73,11 +76,14 @@ def main():
     scenes = [d for d in os.listdir(opt.scannet_path) if os.path.isdir(os.path.join(opt.scannet_path, d))]
     print('Found %d scenes' % len(scenes))
     for i in range(0,len(scenes)):
-        sens_file = os.path.join(opt.scannet_path, scenes[i], scenes[i] + '.sens')
-        label_path = os.path.join(opt.scannet_path, scenes[i], opt.label_type)
+        sens_file = os.path.join(opt.scannet_path, scenes[i], scenes[i] + '.sens')#读取*.sens文件
+        label_path = os.path.join(opt.scannet_path, scenes[i], opt.label_type)#读取标签文件
+        print(sens_file)
+        print(label_path)
         if opt.export_label_images and not os.path.isdir(label_path):
             print_error('Error: using export_label_images option but label path %s does not exist' % label_path)
         output_color_path = os.path.join(opt.output_path, scenes[i], 'color')
+        #创建color,depth,pose,intrinsics,label文件
         if not os.path.isdir(output_color_path):
             os.makedirs(output_color_path)
         output_depth_path = os.path.join(opt.output_path, scenes[i], 'depth')
@@ -94,6 +100,7 @@ def main():
             os.makedirs(output_label_path)
 
         # read and export
+        # 导出RGB图像、深度图、相机姿态、相机内参、（标签图像）;
         sys.stdout.write('\r[ %d | %d ] %s\tloading...' % ((i + 1), len(scenes), scenes[i]))
         sys.stdout.flush()
         sd = SensorData(sens_file)
